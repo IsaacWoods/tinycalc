@@ -1,0 +1,2 @@
+# smolcalc
+A tiny calculator
