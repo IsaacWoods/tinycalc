@@ -48,11 +48,27 @@ impl Expr {
 fn parser() -> impl Parser<char, Expr, Error = Simple<char>> {
     recursive(|expr| {
         // TODO: support scientific notation
-        let num = text::int(10)
+        let decimal = text::int(10)
             .chain::<char, _, _>(just('.').chain(text::digits(10)).or_not().flatten())
             .collect::<String>()
             .map(|s: String| Expr::Num(s.parse().unwrap()))
             .padded();
+        let hex = just('0')
+            .then(just('x'))
+            .ignore_then(text::int(16))
+            .map(|s: String| Expr::Num(i64::from_str_radix(&s, 16).unwrap() as f64))
+            .padded();
+        let binary = just('0')
+            .then(just('b'))
+            .ignore_then(text::int(2))
+            .map(|s: String| Expr::Num(i64::from_str_radix(&s, 2).unwrap() as f64))
+            .padded();
+        let octal = just('0')
+            .then(just('o'))
+            .ignore_then(text::int(8))
+            .map(|s: String| Expr::Num(i64::from_str_radix(&s, 8).unwrap() as f64))
+            .padded();
+        let num = hex.or(binary.or(octal.or(decimal)));
 
         let atom = num.or(expr.delimited_by(just('('), just(')'))).padded();
 
