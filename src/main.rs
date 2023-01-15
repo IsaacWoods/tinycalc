@@ -47,13 +47,14 @@ impl Expr {
 
 fn parser() -> impl Parser<char, Expr, Error = Simple<char>> {
     recursive(|expr| {
-
-
-        let int = text::int(10)
+        // TODO: support scientific notation
+        let num = text::int(10)
+            .chain::<char, _, _>(just('.').chain(text::digits(10)).or_not().flatten())
+            .collect::<String>()
             .map(|s: String| Expr::Num(s.parse().unwrap()))
             .padded();
 
-        let atom = int.or(expr.delimited_by(just('('), just(')'))).padded();
+        let atom = num.or(expr.delimited_by(just('('), just(')'))).padded();
 
         let op = |c| just(c).padded();
 
